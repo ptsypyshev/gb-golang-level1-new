@@ -25,7 +25,7 @@ func main() {
 
 func getCountMapAndTotalCount(phrase string) (map[rune]float64, float64) {
 	var total float64
-	countMap := make(map[rune]float64, len(phrase))
+	countMap := make(map[rune]float64)
 	for _, char := range phrase {
 		if unicode.IsLetter(char) {
 			countMap[char]++

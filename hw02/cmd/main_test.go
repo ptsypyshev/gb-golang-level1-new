@@ -7,6 +7,7 @@ import (
 )
 
 func Test_getCountMapAndTotalCount(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		phrase       string
@@ -122,7 +123,9 @@ func Test_getCountMapAndTotalCount(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			countMap, total := getCountMapAndTotalCount(tt.phrase)
 			assert.Equal(t, tt.wantCountMap, countMap)
 			assert.Equal(t, tt.wantTotal, total)
