@@ -23,14 +23,14 @@ func main() {
 
 	reader := bufio.NewReader(os.Stdin)
 
-	// storage := memory.New() // Заменяем in-memory storage
+	// storage := memory.New() // Change in-memory storage
 	m, err := file.Load(*filepath)
 	if err != nil || m.Urls == nil {
 		log.Printf("cannot load data from file: %s\n", err)
 		m = memory.New()
 	}
 
-	storage := file.New(m, *filepath) // Будем использовать файловое хранилище
+	storage := file.New(m, *filepath) // To file storage
 	a := app.New(storage, reader)
 
 	ctx, cancel := context.WithCancel(context.Background())
