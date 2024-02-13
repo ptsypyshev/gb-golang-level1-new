@@ -59,13 +59,13 @@ func main() {
 	err = g.Wait()
 	switch err {
 	case nil:
-	case app.ErrExitApp:
-		fmt.Println("Завершение по требованию пользователя")
+	case app.ErrAppExited:
+		fmt.Println(app.AppExitedMsg)
 	case io.EOF, app.ErrAppKilled:
-		fmt.Println("Завершение по системному сигналу")
+		fmt.Println(app.AppKilledMsg)
 	default:
-		fmt.Printf("Ошибка: %v\n", err)
+		fmt.Printf(app.DefaultErrTemplate, err)
 	}
 
-	fmt.Println("До новых встреч!")
+	fmt.Println(app.ByeMsg)
 }

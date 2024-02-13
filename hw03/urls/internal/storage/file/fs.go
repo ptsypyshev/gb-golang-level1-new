@@ -3,7 +3,6 @@ package file
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 
 	"github.com/ptsypyshev/gb-golang-level1-new/hw03/urls/internal/app"
@@ -13,13 +12,13 @@ import (
 
 var _ app.Storage = (*FileStor)(nil)
 
-// FileStor is an implementation of app.Storage interface that stores data in memory (map)
+// FileStor is an implementation of app.Storage interface that stores data in JSON file.
 type FileStor struct {
 	InMem    app.Storage
 	filePath string
 }
 
-// New is a constructor for FileStor
+// New is a constructor for FileStor.
 func New(m app.Storage, f string) *FileStor {
 	return &FileStor{
 		InMem:    m,
@@ -47,14 +46,18 @@ func (f *FileStor) Remove(url string) error {
 	return f.InMem.Remove(url)
 }
 
-// Load reads JSON-file with data to urls map
+// Search implements app.Storage.
+func (f *FileStor) Search(t string) ([]models.URL, error) {
+	return f.InMem.Search(t)
+}
+
+// Load reads JSON-file with data to urls map.
 func Load(f string) (*memory.MemStor, error) {
 	bytes, err := os.ReadFile(f)
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Printf("bytes: %s\n", bytes)
 	var res *memory.MemStor
 	err = json.Unmarshal(bytes, &res)
 	if err != nil {
@@ -63,8 +66,8 @@ func Load(f string) (*memory.MemStor, error) {
 	return res, nil
 }
 
-// Save saves JSON-file with data from urls map
-func (f *FileStor) Save() error {	
+// Save saves JSON-file with data from urls map.
+func (f *FileStor) Save() error {
 	data, err := json.MarshalIndent(f.InMem, "", "    ")
 	if err != nil {
 		return err

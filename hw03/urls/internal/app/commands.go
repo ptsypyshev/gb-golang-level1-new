@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/ptsypyshev/gb-golang-level1-new/hw03/urls/internal/models"
 )
 
-// AddURL добавляет новый url в список хранения.
+// AddURL adds a new url to the storage.
 func (a *App) AddURL() error {
-	fmt.Println("Введите новую запись в формате <url описание теги>")
+	fmt.Println(AddCmdHelpMsq)
 
 	text, _ := a.reader.ReadString('\n')
 	args := strings.Fields(strings.TrimSpace(text))
@@ -16,9 +18,9 @@ func (a *App) AddURL() error {
 	return a.storage.Add(args)
 }
 
-// ListURLs возвращает список добавленных url.
+// ListURLs returns a list of added urls.
 //
-// # Вывод в формате
+// # Output in format
 //
 // - Имя: <Описание>
 //
@@ -33,25 +35,47 @@ func (a *App) ListURLs() error {
 		return err
 	}
 
+	drawURLs(urls)
+
+	return nil
+}
+
+// RemoveURL removes a url from the storage.
+func (a *App) RemoveURL() error {
+	fmt.Println(RemoveCmdHelpMsq)
+
+	url, _ := a.reader.ReadString('\n')
+	url = strings.TrimSpace(url)
+
+	return a.storage.Remove(url)
+}
+
+// Search searches the url in the storage list.
+func (a *App) Search() error {
+	fmt.Print(SearchCmdHelpMsq)
+
+	text, _ := a.reader.ReadString('\n')
+	text = strings.TrimSpace(text)
+
+	urls, err := a.storage.Search(text)
+	if err != nil {
+		return err
+	}
+
+	drawURLs(urls)
+
+	return nil
+}
+
+// drawURLs draws the list of urls.
+func drawURLs(urls []models.URL) {
 	for k := range urls {
 		fmt.Printf(
-			"Имя: %s\nURL: %s\nТеги: %v\nДата: %s\n",
+			ListCmdTemplate,
 			urls[k].Description,
 			urls[k].Link,
 			urls[k].Tags,
 			urls[k].Date.Format(time.DateTime),
 		)
 	}
-
-	return nil
-}
-
-// RemoveURL удаляет url из списка хранения.
-func (a *App) RemoveURL() error {
-	fmt.Println("Введите имя ссылки, которое нужно удалить")
-
-	url, _ := a.reader.ReadString('\n')
-	url = strings.TrimSpace(url)
-
-	return a.storage.Remove(url)
 }

@@ -13,24 +13,26 @@ const (
 	AddCmd    = "a"
 	ListCmd   = "l"
 	RemoveCmd = "r"
+	SearchCmd = "s"
 	QuitCmd   = "q"
 )
 
-// Storage is an interface to store URL items
+// Storage is an interface to store URL items.
 type Storage interface {
 	Add(args []string) error
 	List() ([]models.URL, error)
 	Remove(url string) error
+	Search(t string) ([]models.URL, error)
 	Close(ctx context.Context) error
 }
 
-// App is a main structure our application
+// App is a main structure our application.
 type App struct {
 	storage Storage
 	reader  *bufio.Reader
 }
 
-// New is a constructor for App
+// New is a constructor for App.
 func New(s Storage, r *bufio.Reader) *App {
 	return &App{
 		storage: s,
@@ -38,7 +40,7 @@ func New(s Storage, r *bufio.Reader) *App {
 	}
 }
 
-// Run is a method which used to start our application
+// Run is a method which used to start our application.
 func (a *App) Run(ctx context.Context) error {
 	defer a.storage.Close(ctx)
 	var (
@@ -47,19 +49,20 @@ func (a *App) Run(ctx context.Context) error {
 		exit = make(chan error)
 	)
 
-	fmt.Println("Программа для добавления url в список")
-	fmt.Println("Для выхода и приложения нажмите 'q'")
+	fmt.Println(HelloMsg)
+	fmt.Println(QuitHelpMsg)
 
 	go func() {
 		for {
-			fmt.Println("Введите 'a', 'l', 'r' или 'q' для выбора команды")
+			fmt.Print(CommandsHelpMsg)
 			cmd, err = a.reader.ReadString('\n')
 			if err != nil {
-				exit <- ErrExitApp
+				exit <- ErrAppExited
 				return
 			}
 
 			cmd = strings.TrimSpace(cmd)
+			cmd = string(strings.ToLower(cmd)[0])
 			switch cmd {
 			case AddCmd:
 				err = a.AddURL()
@@ -67,15 +70,17 @@ func (a *App) Run(ctx context.Context) error {
 				err = a.ListURLs()
 			case RemoveCmd:
 				err = a.RemoveURL()
+			case SearchCmd:
+				err = a.Search()
 			case QuitCmd:
-				exit <- ErrExitApp
+				exit <- ErrAppExited
 				return
 			default:
-				fmt.Printf("Команда '%s' не верная, повторите\n\n", cmd)
+				fmt.Printf(BadCommandErrTemplate, cmd)
 			}
 
 			if err != nil {
-				fmt.Printf("Ошибка: %s\n", err)
+				fmt.Printf(ErrMsgTemplate, err)
 			}
 		}
 	}()
@@ -88,7 +93,7 @@ func (a *App) Run(ctx context.Context) error {
 	}
 }
 
-// Shutdown is a method which used to stop our application
+// Shutdown is a method which used to stop our application.
 func (a *App) Shutdown(cancel context.CancelFunc) {
 	cancel()
 }
