@@ -3,20 +3,34 @@ package main
 import (
 	"bufio"
 	"context"
+	"flag"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/ptsypyshev/gb-golang-level1-new/hw03/urls/internal/app"
+	"github.com/ptsypyshev/gb-golang-level1-new/hw03/urls/internal/storage/file"
 	"github.com/ptsypyshev/gb-golang-level1-new/hw03/urls/internal/storage/memory"
 	"golang.org/x/sync/errgroup"
 )
 
 func main() {
+	filepath := flag.String("load", "", "Specify JSON file path")
+	flag.Parse()
+
 	reader := bufio.NewReader(os.Stdin)
-	storage := memory.New()
+
+	// storage := memory.New() // Заменяем in-memory storage
+	m, err := file.Load(*filepath)
+	if err != nil || m.Urls == nil {
+		log.Printf("cannot load data from file: %s\n", err)
+		m = memory.New()
+	}
+
+	storage := file.New(m, *filepath) // Будем использовать файловое хранилище
 	a := app.New(storage, reader)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -42,7 +56,7 @@ func main() {
 		return app.ErrAppKilled
 	})
 
-	err := g.Wait()
+	err = g.Wait()
 	switch err {
 	case nil:
 	case app.ErrExitApp:

@@ -13,13 +13,13 @@ var _ app.Storage = (*MemStor)(nil)
 
 // MemStor is an implementation of app.Storage interface that stores data in memory (map)
 type MemStor struct {
-	urls map[string]models.URL
+	Urls map[string]models.URL
 }
 
 // New is a constructor for MemStor
 func New() *MemStor {
 	return &MemStor{
-		urls: make(map[string]models.URL),
+		Urls: make(map[string]models.URL),
 	}
 }
 
@@ -29,7 +29,7 @@ func (a *MemStor) Add(args []string) error {
 		return storage.ErrBadArguments
 	}
 
-	a.urls[args[0]] = models.URL{
+	a.Urls[args[0]] = models.URL{
 		Date:        time.Now(),
 		Link:        args[0],
 		Description: args[1],
@@ -45,8 +45,8 @@ func (a *MemStor) Close(ctx context.Context) error {
 
 // List implements app.Storage.
 func (a *MemStor) List() ([]models.URL, error) {
-	lst := make([]models.URL, 0, len(a.urls))
-	for _, v := range a.urls {
+	lst := make([]models.URL, 0, len(a.Urls))
+	for _, v := range a.Urls {
 		lst = append(lst, v)
 	}
 	return lst, nil
@@ -54,9 +54,9 @@ func (a *MemStor) List() ([]models.URL, error) {
 
 // Remove implements app.Storage.
 func (a *MemStor) Remove(url string) error {
-	if _, ok := a.urls[url]; !ok {
+	if _, ok := a.Urls[url]; !ok {
 		return storage.ErrNotFound
 	}
-	delete(a.urls, url)
+	delete(a.Urls, url)
 	return nil
 }
