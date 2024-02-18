@@ -1,8 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"math"
+	"strconv"
+	"strings"
 )
 
 type Vector3 interface {
@@ -148,6 +151,66 @@ func printVec(v, v1 Vector3) {
 	fmt.Println(v1.Length())
 }
 
+func MarshalS(s structVector3) ([]byte, error) {
+	var sb strings.Builder
+	sb.WriteString(strconv.FormatFloat(s.x, 'f', -1, 64))
+	sb.WriteByte(' ')
+	sb.WriteString(strconv.FormatFloat(s.y, 'f', -1, 64))
+	sb.WriteByte(' ')
+	sb.WriteString(strconv.FormatFloat(s.z, 'f', -1, 64))
+	return []byte(sb.String()), nil
+}
+
+func UnmarshalS(data []byte, s *structVector3) error {
+	splitted := strings.Split(string(data), " ")
+	if len(splitted) != 3 {
+		return errors.New("cannot unmarshal to structVector3: bad input")
+	}
+	for i, elem := range splitted {
+		f, err := strconv.ParseFloat(elem, 64)
+		if err != nil {
+			return errors.New("cannot unmarshal to structVector3: bad float")
+		}
+		switch i {
+		case 0:
+			s.x = f
+		case 1:
+			s.y = f
+		case 2:
+			s.z = f
+		}
+	}
+	return nil
+}
+
+func MarshalA(a arrayVector3) ([]byte, error) {
+	var sb strings.Builder
+	for _, v := range a {
+		if sb.Len() == 0 {
+			sb.WriteString(strconv.FormatFloat(v, 'f', -1, 64))
+		} else {
+			sb.WriteByte(' ')
+			sb.WriteString(strconv.FormatFloat(v, 'f', -1, 64))
+		}
+	}
+	return []byte(sb.String()), nil
+}
+
+func UnmarshalA(data []byte, a *arrayVector3) error {
+	splitted := strings.Split(string(data), " ")
+	if len(splitted) != 3 {
+		return errors.New("cannot unmarshal to arrayVector3: bad input")
+	}
+	for i, elem := range splitted {
+		f, err := strconv.ParseFloat(elem, 64)
+		if err != nil {
+			return errors.New("cannot unmarshal to arrayVector3: bad float")
+		}
+		a[i] = f
+	}
+	return nil
+}
+
 func main() {
 	vec := arrayVector3{0: 1, 1: 1, 2: 1}
 	vec1 := structVector3{
@@ -164,4 +227,34 @@ func main() {
 		z: 1,
 	}
 	fmt.Println(Sum(vec, vec1, vec2, vec3))
+
+	bytes, err := MarshalA(vec2)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Printf("Marshaled: %s\n", bytes)
+
+		var vec4 arrayVector3
+		err = UnmarshalA(bytes, &vec4)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Printf("Unmarshaled: %+v\n", vec4)
+		}
+	}
+
+	bytes, err = MarshalS(vec3)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Printf("Marshaled: %s\n", bytes)
+
+		var vec5 structVector3
+		err = UnmarshalS(bytes, &vec5)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Printf("Unmarshaled: %+v\n", vec5)
+		}
+	}
 }
