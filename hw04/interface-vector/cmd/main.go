@@ -131,6 +131,14 @@ func (s structVector3) Length() float64 {
 	return math.Sqrt(s.X()*s.X() + s.Y()*s.Y() + s.Z()*s.Z())
 }
 
+func Sum(vectors ...Vector3) Vector3 {
+	var res structVector3
+	for _, v := range vectors {
+		res = res.Add(v).(structVector3)
+	}
+	return res
+}
+
 func printVec(v, v1 Vector3) {
 	fmt.Println(v.Add(v1))
 	fmt.Println(v.Subtract(v1))
@@ -148,4 +156,12 @@ func main() {
 		z: 0,
 	}
 	printVec(vec, vec1)
+
+	vec2 := arrayVector3{0: 5, 1: 2, 2: 3}
+	vec3 := structVector3{
+		x: 4,
+		y: 7,
+		z: 1,
+	}
+	fmt.Println(Sum(vec, vec1, vec2, vec3))
 }
