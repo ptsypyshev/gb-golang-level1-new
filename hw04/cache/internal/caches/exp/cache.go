@@ -1,26 +1,22 @@
-package cache
+package exp
 
 import (
 	"context"
 	"time"
 
+	"github.com/ptsypyshev/gb-golang-level1-new/hw04/cache/internal/caches"
 	"github.com/ptsypyshev/gb-golang-level1-new/hw04/cache/internal/llist"
 )
 
 const DefaultTTL = 5 * time.Second
 
-type Cache interface {
-	Get(k string) (string, bool)
-	Set(k, v string)
-}
-
-var _ Cache = (*cacheImpl)(nil)
+var _ caches.Cache = (*cacheImpl)(nil)
 
 // Доработает конструктор и методы кеша, так чтобы они соответствовали интерфейсу Cache
 func New(ctx context.Context, ttl time.Duration) *cacheImpl {
 	c := &cacheImpl{
-		cache: make(map[string]string),
-		ttl:   ttl,
+		cache:    make(map[string]string),
+		ttl:      ttl,
 		timeList: &llist.LinkedListImpl{},
 	}
 	go c.dropExpired(ctx)

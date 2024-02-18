@@ -4,14 +4,14 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ptsypyshev/gb-golang-level1-new/hw04/cache/internal/cache"
+	"github.com/ptsypyshev/gb-golang-level1-new/hw04/cache/internal/caches/exp"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_dbImpl_Get(t *testing.T) {
 	t.Parallel()
 
-	c := cache.New(context.Background(), cache.DefaultTTL)
+	c := exp.New(context.Background(), exp.DefaultTTL)
 	db := New(c)
 	db.Set("exist", "true")
 

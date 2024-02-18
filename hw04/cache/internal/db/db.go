@@ -3,15 +3,15 @@ package db
 import (
 	"fmt"
 
-	"github.com/ptsypyshev/gb-golang-level1-new/hw04/cache/internal/cache"
+	"github.com/ptsypyshev/gb-golang-level1-new/hw04/cache/internal/caches"
 )
 
-func New(cache cache.Cache) *dbImpl {
+func New(cache caches.Cache) *dbImpl {
 	return &dbImpl{cache: cache, dbs: map[string]string{"hello": "world", "test": "test"}}
 }
 
 type dbImpl struct {
-	cache cache.Cache
+	cache caches.Cache
 	dbs   map[string]string
 }
 
