@@ -1,13 +1,16 @@
-package main
+package cache
 
 import (
+	"context"
 	"testing"
+	"time"
 
+	"github.com/ptsypyshev/gb-golang-level1-new/hw04/cache/internal/llist"
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_newCacheImpl(t *testing.T) {
-	got := newCacheImpl()
+func Test_New(t *testing.T) {
+	got := New(context.Background(), DefaultTTL)
 	assert.NotNil(t, got.cache)
 	assert.IsType(t, map[string]string{}, got.cache)
 }
@@ -16,6 +19,8 @@ func Test_cacheImpl_Get(t *testing.T) {
 	t.Parallel()
 	cache := &cacheImpl{
 		cache: map[string]string{"exist": "true"},
+		timeList: &llist.LinkedListImpl{},
+		ttl: DefaultTTL,
 	}
 
 	type args struct {
@@ -49,7 +54,7 @@ func Test_cacheImpl_Get(t *testing.T) {
 		},
 		{
 			name: "Get any value from empty cache",
-			c:    newCacheImpl(),
+			c:    New(context.Background(), DefaultTTL),
 			args: args{
 				key:   "any",
 				value: "",
@@ -71,6 +76,8 @@ func Test_cacheImpl_Get(t *testing.T) {
 func Test_cacheImpl_Set(t *testing.T) {
 	cache := &cacheImpl{
 		cache: map[string]string{"exist": "true"},
+		timeList: &llist.LinkedListImpl{},
+		ttl: DefaultTTL,
 	}
 
 	type args struct {
@@ -84,7 +91,7 @@ func Test_cacheImpl_Set(t *testing.T) {
 	}{
 		{
 			name: "Set to empty cache",
-			c:    newCacheImpl(),
+			c:    New(context.Background(), DefaultTTL),
 			args: args{
 				k: "first",
 				v: "item",
@@ -111,63 +118,22 @@ func Test_cacheImpl_Set(t *testing.T) {
 	}
 }
 
-func Test_dbImpl_Get(t *testing.T) {
+func Test_cacheImpl_dropExpired(t *testing.T) {
 	t.Parallel()
 
-	c := newCacheImpl()
-	db := newDbImpl(c)
-	db.Set("exist", "true")
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
 
-	tests := []struct {
-		name  string
-		d     *dbImpl
-		key   string
-		value string
-		ok    bool
-	}{
-		{
-			name:  "Get exist value from db (cached)",
-			d:     db,
-			key:   "exist",
-			value: "answer from cache: key: exist, val: true",
-			ok:    true,
-		},
-		{
-			name:  "Get exist value from db (not cached)",
-			d:     db,
-			key:   "hello",
-			value: "answer from dbs: key: hello, val: world",
-			ok:    true,
-		},		
-		{
-			name:  "Get exist value from db (now it is cached)",
-			d:     db,
-			key:   "hello",
-			value: "answer from cache: key: hello, val: world",
-			ok:    true,
-		},
-		{
-			name:  "Get exist value from db (not exist)",
-			d:     db,
-			key:   "not_exist",
-			value: "answer from dbs: key: not_exist, val: ",
-			ok:    false,
-		},
-		{
-			name:  "Get exist value from db (now it is cached but absent in dbs)",
-			d:     db,
-			key:   "not_exist",
-			value: "answer from cache: key: not_exist, val: ",
-			ok:    true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	c := New(ctx, 30 * time.Millisecond)
 
-			val, ok := tt.d.Get(tt.key)
+	c.Set("first", "one")
+	time.Sleep(20 * time.Millisecond) // 20ms
+	c.Set("second", "two")
+	time.Sleep(20 * time.Millisecond) // 40ms
+	c.Set("third", "three")
+	time.Sleep(20 * time.Millisecond) // 60ms
+	c.Set("fourh", "four")
+	time.Sleep(20 * time.Millisecond) // 80ms
 
-			assert.Equal(t, tt.value, val)
-			assert.Equal(t, tt.ok, ok)
-		})
-	}
+	assert.Equal(t, map[string]string{"third": "three", "fourh": "four"}, c.cache)
 }
